@@ -30,6 +30,7 @@ import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.Write.CreateDisposition;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.Write.WriteDisposition;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.Validation;
@@ -80,6 +81,12 @@ public class TextIOToBigQuery {
     ValueProvider<String> getBigQueryLoadingTemporaryDirectory();
 
     void setBigQueryLoadingTemporaryDirectory(ValueProvider<String> directory);
+
+    @Validation.Required
+    @Description("Action that occurs if the destination table exists")
+    @Default.Enum("WRITE_TRUNCATE")
+    ValueProvider<WriteDisposition> getBigQueryWriteDisposition();
+    void setBigQueryWriteDisposition(ValueProvider<WriteDisposition> writeDisposition);
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(TextIOToBigQuery.class);
@@ -147,7 +154,7 @@ public class TextIOToBigQuery {
                         }))
                 .to(options.getOutputTable())
                 .withCreateDisposition(CreateDisposition.CREATE_IF_NEEDED)
-                .withWriteDisposition(WriteDisposition.WRITE_TRUNCATE)
+                .withWriteDisposition(options.getBigQueryWriteDisposition().get())
                 .withCustomGcsTempLocation(options.getBigQueryLoadingTemporaryDirectory()));
 
     pipeline.run();
